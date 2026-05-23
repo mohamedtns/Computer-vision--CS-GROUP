@@ -52,4 +52,4 @@ This project was conducted in a restricted defense R&D context. Implementation d
 
 ---
 
-*Mohamed Boudhina — AI & Computer Vision Engineer · [LinkedIn](https://https://www.linkedin.com/in/mohamed-boudhina-a94a36265/) · [GitHub](https://https://github.com/mohamedtns)*
+*Mohamed Boudhina — AI & Computer Vision Engineer · [LinkedIn](https://https://linkedin.com/mohamed-boudhina-a94a36265/) · [GitHub](https://https://github.com/mohamedtns)*
