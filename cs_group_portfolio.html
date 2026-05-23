@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Maritime Surveillance AI — Mohamed Boudhina</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0a0c10;
+    --surface: #111520;
+    --surface2: #161c2a;
+    --border: rgba(99,140,255,0.12);
+    --border2: rgba(99,140,255,0.22);
+    --accent: #4a8cff;
+    --accent2: #00d4aa;
+    --accent3: #ff6b6b;
+    --text: #e8edf8;
+    --muted: #7a8ba8;
+    --muted2: #4a5570;
+    --tag-bg: rgba(74,140,255,0.1);
+    --tag-border: rgba(74,140,255,0.3);
+    --tag-text: #7cb8ff;
+    --green-bg: rgba(0,212,170,0.08);
+    --green-border: rgba(0,212,170,0.25);
+    --green-text: #00d4aa;
+  }
+
+  html { font-size: 16px; scroll-behavior: smooth; }
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    min-height: 100vh;
+  }
+
+  /* grid noise background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(74,140,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(74,140,255,0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container { max-width: 860px; margin: 0 auto; padding: 0 2rem; position: relative; z-index: 1; }
+
+  /* ── HEADER ── */
+  header {
+    padding: 4rem 0 3rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .breadcrumb {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+    margin-bottom: 2rem;
+  }
+  .breadcrumb span { color: var(--accent); }
+
+  .header-label {
+    display: inline-block;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent2);
+    background: var(--green-bg);
+    border: 1px solid var(--green-border);
+    border-radius: 4px;
+    padding: 4px 12px;
+    margin-bottom: 1.25rem;
+  }
+
+  h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(2rem, 5vw, 3rem);
+    font-weight: 800;
+    line-height: 1.1;
+    color: #fff;
+    margin-bottom: 1rem;
+    letter-spacing: -0.02em;
+  }
+  h1 em {
+    font-style: normal;
+    color: var(--accent);
+  }
+
+  .subtitle {
+    font-size: 1.05rem;
+    color: var(--muted);
+    font-weight: 300;
+    max-width: 620px;
+    margin-bottom: 2rem;
+  }
+
+  .meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .meta-row .item { display: flex; align-items: center; gap: 6px; }
+  .meta-row .dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--accent2);
+    flex-shrink: 0;
+  }
+
+  /* ── TAGS ── */
+  .tags {
+    display: flex; flex-wrap: wrap; gap: 8px;
+    margin-top: 1.5rem;
+  }
+  .tag {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 4px;
+    background: var(--tag-bg);
+    border: 1px solid var(--tag-border);
+    color: var(--tag-text);
+    letter-spacing: 0.03em;
+  }
+
+  /* ── SECTIONS ── */
+  section { padding: 3rem 0; border-bottom: 1px solid var(--border); }
+  section:last-child { border-bottom: none; }
+
+  h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  h2::before {
+    content: '';
+    display: block;
+    width: 3px;
+    height: 1.35rem;
+    background: var(--accent);
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  p { color: var(--muted); margin-bottom: 1rem; }
+  p:last-child { margin-bottom: 0; }
+
+  /* ── PIPELINE ── */
+  .pipeline {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    margin: 1.5rem 0;
+  }
+  .pipe-step {
+    background: var(--surface);
+    padding: 1.25rem 1rem;
+    text-align: center;
+    position: relative;
+  }
+  .pipe-step:not(:last-child)::after {
+    content: '→';
+    position: absolute;
+    right: -10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--accent);
+    font-size: 14px;
+    z-index: 2;
+  }
+  .pipe-icon {
+    font-size: 24px;
+    margin-bottom: 8px;
+    display: block;
+  }
+  .pipe-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 4px;
+  }
+  .pipe-desc {
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.4;
+  }
+
+  /* ── METRICS GRID ── */
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+    margin: 1.5rem 0;
+  }
+  .metric-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.25rem;
+    text-align: center;
+    transition: border-color 0.2s;
+  }
+  .metric-card:hover { border-color: var(--border2); }
+  .metric-value {
+    font-family: 'Syne', sans-serif;
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--accent);
+    display: block;
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+  .metric-value.green { color: var(--accent2); }
+  .metric-label {
+    font-size: 12px;
+    color: var(--muted);
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  /* ── TECH STACK ── */
+  .stack-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+    margin-top: 1rem;
+  }
+  .stack-group {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+  }
+  .stack-group-title {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+    margin-bottom: 10px;
+  }
+  .stack-items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .stack-item {
+    font-size: 12px;
+    font-family: 'IBM Plex Mono', monospace;
+    padding: 3px 8px;
+    background: var(--bg);
+    border: 1px solid var(--muted2);
+    border-radius: 4px;
+    color: var(--text);
+  }
+
+  /* ── TIMELINE ── */
+  .timeline { margin-top: 1rem; }
+  .tl-item {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    position: relative;
+  }
+  .tl-item:not(:last-child)::before {
+    content: '';
+    position: absolute;
+    left: 22px;
+    top: 38px;
+    bottom: -14px;
+    width: 1px;
+    background: var(--border);
+  }
+  .tl-dot {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    font-weight: 500;
+  }
+  .tl-content {}
+  .tl-phase {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    color: #fff;
+    margin-bottom: 4px;
+  }
+  .tl-detail {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  /* ── RESULTS ── */
+  .result-block {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  .result-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: var(--tag-bg);
+    border: 1px solid var(--tag-border);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    margin-top: 2px;
+  }
+  .result-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 4px;
+  }
+  .result-text {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.5;
+    margin: 0;
+  }
+
+  /* ── CODE BLOCK ── */
+  .code-block {
+    background: #0d1117;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.25rem 1.5rem;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: #cdd9e5;
+    overflow-x: auto;
+    margin: 1.5rem 0;
+    line-height: 1.7;
+  }
+  .code-block .cm { color: #5c6370; }
+  .code-block .ck { color: #c678dd; }
+  .code-block .cs { color: #98c379; }
+  .code-block .cn { color: #e5c07b; }
+  .code-block .cv { color: #61afef; }
+
+  /* ── FOOTER ── */
+  footer {
+    padding: 2.5rem 0;
+    text-align: center;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: var(--muted2);
+  }
+  footer a { color: var(--accent); text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .fade-up { animation: fadeUp 0.6s ease both; }
+  .delay-1 { animation-delay: 0.1s; }
+  .delay-2 { animation-delay: 0.2s; }
+  .delay-3 { animation-delay: 0.3s; }
+
+  @media (max-width: 600px) {
+    .pipeline { grid-template-columns: 1fr 1fr; }
+    .pipe-step:not(:last-child)::after { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- HEADER -->
+  <header class="fade-up">
+    <div class="breadcrumb">
+      portfolio / <span>defense-ai</span> / maritime-surveillance
+    </div>
+    <div class="header-label">Defense &amp; AI — Computer Vision</div>
+    <h1>Real-Time <em>Maritime</em><br/>Surveillance System</h1>
+    <p class="subtitle">
+      End-to-end AI pipeline for automated vessel detection, classification,
+      and tracking from video feeds — developed during a 5-month R&amp;D internship
+      in a defense-sector research lab.
+    </p>
+    <div class="meta-row">
+      <div class="item"><div class="dot"></div>Mar 2025 – Aug 2025</div>
+      <div class="item"><div class="dot"></div>Defense R&amp;D Lab · South France</div>
+      <div class="item"><div class="dot"></div>5 months · Full-time</div>
+    </div>
+    <div class="tags">
+      <span class="tag">Python</span>
+      <span class="tag">YOLOv8</span>
+      <span class="tag">Deep SORT</span>
+      <span class="tag">MobileNetV3</span>
+      <span class="tag">Vision Transformer</span>
+      <span class="tag">PyTorch</span>
+      <span class="tag">OpenCV</span>
+      <span class="tag">Multithreading</span>
+      <span class="tag">GPU / CUDA</span>
+      <span class="tag">Tkinter</span>
+    </div>
+  </header>
+
+  <!-- CONTEXT -->
+  <section class="fade-up delay-1">
+    <h2>Context &amp; Problem</h2>
+    <p>
+      Maritime surveillance is a critical national security challenge. Monitoring coastal zones,
+      detecting irregular vessel movements, and transmitting structured intelligence to command
+      centers requires automated, real-time solutions that work reliably in degraded conditions —
+      night, fog, low contrast infrared imagery.
+    </p>
+    <p>
+      The mission was to design a complete video processing system capable of automatically
+      detecting vessels in both infrared (IR) and visible-light video streams, classifying them
+      by type, tracking each target over time, and exporting structured trajectory data for
+      integration into operational command-and-control tools.
+    </p>
+    <p>
+      The project was treated as a production-grade R&amp;D prototype — real annotated datasets,
+      full IVVQ process, documented architecture, and milestone deliveries.
+    </p>
+  </section>
+
+  <!-- PIPELINE -->
+  <section class="fade-up delay-2">
+    <h2>AI Processing Pipeline</h2>
+    <p>
+      The system processes raw video frames through a four-stage pipeline running in a
+      multithreaded Python architecture, with GPU acceleration throughout.
+    </p>
+    <div class="pipeline">
+      <div class="pipe-step">
+        <span class="pipe-icon">🎯</span>
+        <div class="pipe-title">Detection</div>
+        <div class="pipe-desc">YOLOv8 locates vessels frame-by-frame</div>
+      </div>
+      <div class="pipe-step">
+        <span class="pipe-icon">🏷️</span>
+        <div class="pipe-title">Classification</div>
+        <div class="pipe-desc">CNN assigns vessel type from taxonomy</div>
+      </div>
+      <div class="pipe-step">
+        <span class="pipe-icon">📍</span>
+        <div class="pipe-title">Tracking</div>
+        <div class="pipe-desc">Deep SORT assigns persistent IDs</div>
+      </div>
+      <div class="pipe-step">
+        <span class="pipe-icon">📤</span>
+        <div class="pipe-title">Export</div>
+        <div class="pipe-desc">Structured JSON with trajectories</div>
+      </div>
+    </div>
+    <p>
+      Each stage runs in a dedicated thread. A "Last Frame Only" strategy prevents queue
+      buildup, keeping end-to-end latency under 100 ms per frame on GPU. The full pipeline
+      — read + YOLO + CNN + Deep SORT — sustains 30 fps without blocking the UI.
+    </p>
+  </section>
+
+  <!-- KEY METRICS -->
+  <section>
+    <h2>Model Performance</h2>
+    <p>
+      All models were trained from scratch or fine-tuned on custom IR / visible datasets
+      and evaluated with standard computer vision metrics.
+    </p>
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <span class="metric-value green">97%</span>
+        <div class="metric-label">ViT accuracy<br/>IR domain</div>
+      </div>
+      <div class="metric-card">
+        <span class="metric-value green">96%</span>
+        <div class="metric-label">MobileNetV3<br/>accuracy IR</div>
+      </div>
+      <div class="metric-card">
+        <span class="metric-value">0.98</span>
+        <div class="metric-label">YOLOv8x precision<br/>IR dataset</div>
+      </div>
+      <div class="metric-card">
+        <span class="metric-value">0.99</span>
+        <div class="metric-label">YOLOv8x recall<br/>IR dataset</div>
+      </div>
+      <div class="metric-card">
+        <span class="metric-value green">34ms</span>
+        <div class="metric-label">YOLO inference<br/>GPU (version x)</div>
+      </div>
+      <div class="metric-card">
+        <span class="metric-value">&lt;100ms</span>
+        <div class="metric-label">Full pipeline<br/>per frame</div>
+      </div>
+    </div>
+    <p>
+      Three classification architectures were compared — MobileNetV3, ResNeXt50, and
+      Vision Transformer (ViT). The ViT consistently outperformed CNNs, reaching ~97%
+      accuracy on both IR and visible domains. MobileNetV3 was retained for deployment
+      due to its speed-accuracy trade-off on embedded/GPU setups.
+    </p>
+  </section>
+
+  <!-- TIMELINE -->
+  <section>
+    <h2>Work Breakdown (22 weeks)</h2>
+    <div class="timeline">
+      <div class="tl-item">
+        <div class="tl-dot">W1–2</div>
+        <div class="tl-content">
+          <div class="tl-phase">Pre-study &amp; specifications</div>
+          <div class="tl-detail">State-of-the-art review, requirements analysis, technical specification writing, testing pre-trained models on visible images.</div>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot">W3–6</div>
+        <div class="tl-content">
+          <div class="tl-phase">Dataset preparation &amp; first training</div>
+          <div class="tl-detail">Dataset cleaning, class balancing, data augmentation. First MobileNetV3 training on IR imagettes. Confusion matrix analysis.</div>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot">W7–10</div>
+        <div class="tl-content">
+          <div class="tl-phase">AI model training &amp; benchmarking</div>
+          <div class="tl-detail">YOLOv8s/x training on IR+visible. Classifier benchmark: MobileNetV3 vs EfficientNetB0 vs ResNeXt50 vs ViT. Metrics evaluation.</div>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot">W11–15</div>
+        <div class="tl-content">
+          <div class="tl-phase">GUI development &amp; pipeline integration</div>
+          <div class="tl-detail">Tkinter IHM from scratch. Multithreaded architecture. Deep SORT integration. GPU migration. First milestone delivery (April 30).</div>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot">W16–18</div>
+        <div class="tl-content">
+          <div class="tl-phase">Performance optimization</div>
+          <div class="tl-detail">Profiling &amp; bottleneck analysis. Last-Frame strategy. Dedicated classification thread. Latency reduced to &lt;100ms/frame.</div>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot">W19–22</div>
+        <div class="tl-content">
+          <div class="tl-phase">Finalization &amp; documentation</div>
+          <div class="tl-detail">JSON export format alignment for C2 tool integration. Code documentation. Final report &amp; oral presentation to R&amp;D team.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TECHNICAL RESULTS -->
+  <section>
+    <h2>Key Technical Achievements</h2>
+
+    <div class="result-block">
+      <div class="result-icon">🧵</div>
+      <div>
+        <div class="result-title">Multithreaded real-time architecture</div>
+        <p class="result-text">
+          Designed a 4-thread pipeline (read / detect / classify / track) with shared memory queues.
+          The "Last Frame Only" strategy eliminates accumulation lag, sustaining 30 fps output
+          without blocking the user interface.
+        </p>
+      </div>
+    </div>
+
+    <div class="result-block">
+      <div class="result-icon">🤖</div>
+      <div>
+        <div class="result-title">Custom IR model training pipeline</div>
+        <p class="result-text">
+          Built a full training pipeline for both IR and visible domains. Handled class imbalance
+          with automatic weight computation. Fine-tuned YOLOv8 (500 epochs, 4536 IR images) and
+          four classification architectures, reaching up to 97.18% accuracy.
+        </p>
+      </div>
+    </div>
+
+    <div class="result-block">
+      <div class="result-icon">📦</div>
+      <div>
+        <div class="result-title">Modular IHM with dynamic model loading</div>
+        <p class="result-text">
+          The GUI supports runtime model swapping — any <code>.pth</code> + <code>.py</code>
+          classifier file dropped in the classifiers/ folder is auto-detected. Detection threshold,
+          camera parameters (azimuth, FOV, elevation), and tracker embedder are all configurable
+          without restarting.
+        </p>
+      </div>
+    </div>
+
+    <div class="result-block">
+      <div class="result-icon">🗺️</div>
+      <div>
+        <div class="result-title">Structured JSON export for C2 integration</div>
+        <p class="result-text">
+          Each tracked vessel is exported with ID, class, subclass, confidence, and full
+          per-frame trajectory (x, y, direction angle). Format was designed for direct ingestion
+          by an internal defense command-and-control platform.
+        </p>
+      </div>
+    </div>
+
+    <!-- JSON snippet -->
+    <div class="code-block">
+<span class="cm">// Example exported track — vessel #1</span>
+{
+  <span class="cv">"id"</span>: <span class="cs">"1"</span>,
+  <span class="cv">"class"</span>: <span class="cs">"boat"</span>,
+  <span class="cv">"subclass"</span>: <span class="cs">"nap"</span>,
+  <span class="cv">"subclass_confidence"</span>: <span class="cn">1.0</span>,
+  <span class="cv">"trajectory"</span>: [
+    { <span class="cv">"frame"</span>: <span class="cn">11</span>, <span class="cv">"x"</span>: <span class="cn">614</span>, <span class="cv">"y"</span>: <span class="cn">305</span>, <span class="cv">"direction"</span>: <span class="ck">null</span> },
+    { <span class="cv">"frame"</span>: <span class="cn">14</span>, <span class="cv">"x"</span>: <span class="cn">611</span>, <span class="cv">"y"</span>: <span class="cn">304</span>, <span class="cv">"direction"</span>: <span class="cn">-161.6</span> },
+    { <span class="cv">"frame"</span>: <span class="cn">17</span>, <span class="cv">"x"</span>: <span class="cn">609</span>, <span class="cv">"y"</span>: <span class="cn">305</span>, <span class="cv">"direction"</span>: <span class="cn">153.4</span> }
+  ]
+}
+    </div>
+  </section>
+
+  <!-- TECH STACK -->
+  <section>
+    <h2>Technology Stack</h2>
+    <div class="stack-grid">
+      <div class="stack-group">
+        <div class="stack-group-title">AI / Detection</div>
+        <div class="stack-items">
+          <span class="stack-item">YOLOv8s/x</span>
+          <span class="stack-item">MobileNetV3</span>
+          <span class="stack-item">ResNeXt50</span>
+          <span class="stack-item">ViT</span>
+          <span class="stack-item">EfficientNetB0</span>
+          <span class="stack-item">Deep SORT</span>
+        </div>
+      </div>
+      <div class="stack-group">
+        <div class="stack-group-title">Frameworks</div>
+        <div class="stack-items">
+          <span class="stack-item">PyTorch</span>
+          <span class="stack-item">TensorFlow</span>
+          <span class="stack-item">OpenCV</span>
+          <span class="stack-item">scikit-learn</span>
+          <span class="stack-item">CUDA</span>
+        </div>
+      </div>
+      <div class="stack-group">
+        <div class="stack-group-title">Software / GUI</div>
+        <div class="stack-items">
+          <span class="stack-item">Python 3</span>
+          <span class="stack-item">Tkinter</span>
+          <span class="stack-item">threading</span>
+          <span class="stack-item">JSON</span>
+          <span class="stack-item">Linux/GPU</span>
+        </div>
+      </div>
+      <div class="stack-group">
+        <div class="stack-group-title">Methods</div>
+        <div class="stack-items">
+          <span class="stack-item">IVVQ</span>
+          <span class="stack-item">V-Cycle</span>
+          <span class="stack-item">UML</span>
+          <span class="stack-item">transfer learning</span>
+          <span class="stack-item">data augmentation</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- WHAT I LEARNED -->
+  <section>
+    <h2>Takeaways</h2>
+    <p>
+      This project was my first full end-to-end AI engineering mission in a production-constrained
+      defense environment — from raw dataset to deployed GUI. The key lessons:
+    </p>
+    <p>
+      <strong style="color: var(--text); font-weight: 500;">Architecture beats raw model performance.</strong> Choosing the right threading strategy
+      and queue management had more impact on usability than squeezing an extra 0.5% accuracy
+      from the classifier.
+    </p>
+    <p>
+      <strong style="color: var(--text); font-weight: 500;">Dataset quality is everything in IR.</strong> Infrared imagery is noisy, low-contrast,
+      and domain-specific — standard pretrained weights transfer poorly. Rigorous data collection,
+      cleaning, and augmentation were what made the 97% ViT accuracy possible.
+    </p>
+    <p>
+      <strong style="color: var(--text); font-weight: 500;">Modularity pays off immediately.</strong> Designing the GUI to load any
+      classifier dynamically let me benchmark 4 architectures without touching core code —
+      saving days of integration work.
+    </p>
+    <p>
+      <strong style="color: var(--text); font-weight: 500;">Defense context adds real constraints.</strong> Working toward C2 integration
+      meant the JSON schema, latency targets, and IVVQ documentation were non-negotiable requirements,
+      not optional. That discipline shaped every technical decision.
+    </p>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <p>
+      Mohamed Boudhina · AI &amp; Computer Vision Engineer · Freelance ·
+      <a href="https://linkedin.com/in/mohamed-boudhina">LinkedIn</a> ·
+      <a href="https://github.com/MohamedBoudhina">GitHub</a>
+    </p>
+    <p style="margin-top: 6px; font-size: 11px; color: #2a3a55;">
+      Note: project details are intentionally limited — this work was performed in a restricted defense R&amp;D context.
+    </p>
+  </footer>
+
+</div>
+</body>
+</html>
